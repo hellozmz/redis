@@ -31,6 +31,7 @@
 #ifndef __SDS_H
 #define __SDS_H
 
+// 分配最大的内存空间
 #define SDS_MAX_PREALLOC (1024*1024)
 
 #include <sys/types.h>
@@ -39,16 +40,24 @@
 typedef char *sds;
 
 struct sdshdr {
-    unsigned int len;
-    unsigned int free;
-    char buf[];
+    unsigned int len;   // 字符串的长度
+    unsigned int free;  // 申请空间中剩余的长度
+    char buf[];         // 字符串的存储位置
 };
 
+/*
+ * 内联函数，用于返回字符串的长度
+ * TODO: 为什么要使用 减法
+ */
 static inline size_t sdslen(const sds s) {
     struct sdshdr *sh = (void*)(s-(sizeof(struct sdshdr)));
     return sh->len;
 }
 
+/*
+ * 返回值是一个长度
+ * TODO: 函数意义
+ */
 static inline size_t sdsavail(const sds s) {
     struct sdshdr *sh = (void*)(s-(sizeof(struct sdshdr)));
     return sh->free;
