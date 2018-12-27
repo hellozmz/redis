@@ -31,7 +31,7 @@
 #ifndef __SDS_H
 #define __SDS_H
 
-// 分配最大的内存空间
+// 分配最大的内存空间是1M
 #define SDS_MAX_PREALLOC (1024*1024)
 
 #include <sys/types.h>
@@ -46,8 +46,7 @@ struct sdshdr {
 };
 
 /*
- * 内联函数，用于返回字符串的长度
- * TODO: 为什么要使用 减法
+ * 内联函数，用于返回字符串的长度，不包括剩余空间长度
  */
 static inline size_t sdslen(const sds s) {
     struct sdshdr *sh = (void*)(s-(sizeof(struct sdshdr)));
@@ -55,25 +54,26 @@ static inline size_t sdslen(const sds s) {
 }
 
 /*
- * 返回值是一个长度
- * TODO: 函数意义
+ * 返回字符串中剩余空间
  */
 static inline size_t sdsavail(const sds s) {
     struct sdshdr *sh = (void*)(s-(sizeof(struct sdshdr)));
     return sh->free;
 }
 
-sds sdsnewlen(const void *init, size_t initlen);
-sds sdsnew(const char *init);
-sds sdsempty(void);
-size_t sdslen(const sds s);
-sds sdsdup(const sds s);
-void sdsfree(sds s);
-size_t sdsavail(const sds s);
-sds sdsgrowzero(sds s, size_t len);
+sds sdsnewlen(const void *init, size_t initlen);    // 新的字符串长度
+sds sdsnew(const char *init);   // 申请一个新的字符串
+sds sdsempty(void); // 字符串置空
+size_t sdslen(const sds s); // 返回字符串的长度
+sds sdsdup(const sds s);    // 存储字符串
+void sdsfree(sds s);    // 删除字符串
+size_t sdsavail(const sds s);   // 返回剩余空间
+sds sdsgrowzero(sds s, size_t len); // 
+// 字符串拼接先关操作
 sds sdscatlen(sds s, const void *t, size_t len);
 sds sdscat(sds s, const char *t);
 sds sdscatsds(sds s, const sds t);
+// 字符串拷贝相关操作
 sds sdscpylen(sds s, const char *t, size_t len);
 sds sdscpy(sds s, const char *t);
 
@@ -85,26 +85,26 @@ sds sdscatprintf(sds s, const char *fmt, ...)
 sds sdscatprintf(sds s, const char *fmt, ...);
 #endif
 
-sds sdscatfmt(sds s, char const *fmt, ...);
-sds sdstrim(sds s, const char *cset);
-void sdsrange(sds s, int start, int end);
-void sdsupdatelen(sds s);
-void sdsclear(sds s);
-int sdscmp(const sds s1, const sds s2);
-sds *sdssplitlen(const char *s, int len, const char *sep, int seplen, int *count);
-void sdsfreesplitres(sds *tokens, int count);
-void sdstolower(sds s);
-void sdstoupper(sds s);
-sds sdsfromlonglong(long long value);
-sds sdscatrepr(sds s, const char *p, size_t len);
+sds sdscatfmt(sds s, char const *fmt, ...); // 
+sds sdstrim(sds s, const char *cset);   // 去掉首尾字符
+void sdsrange(sds s, int start, int end);   // 
+void sdsupdatelen(sds s);   // 更新字符串
+void sdsclear(sds s);   // 清空字符串
+int sdscmp(const sds s1, const sds s2); // 比较字符串
+sds *sdssplitlen(const char *s, int len, const char *sep, int seplen, int *count);  // 切分字符串
+void sdsfreesplitres(sds *tokens, int count);   
+void sdstolower(sds s); // 字符串转小写
+void sdstoupper(sds s); // 字符串转大写
+sds sdsfromlonglong(long long value);   // 将长整形转化成字符串
+sds sdscatrepr(sds s, const char *p, size_t len);   
 sds *sdssplitargs(const char *line, int *argc);
 sds sdsmapchars(sds s, const char *from, const char *to, size_t setlen);
-sds sdsjoin(char **argv, int argc, char *sep);
+sds sdsjoin(char **argv, int argc, char *sep);  // 合并字符串
 
 /* Low level functions exposed to the user API */
 sds sdsMakeRoomFor(sds s, size_t addlen);
-void sdsIncrLen(sds s, int incr);
-sds sdsRemoveFreeSpace(sds s);
+void sdsIncrLen(sds s, int incr);   // 
+sds sdsRemoveFreeSpace(sds s);  // 释放空间
 size_t sdsAllocSize(sds s);
 
 #endif
