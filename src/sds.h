@@ -46,7 +46,9 @@ struct sdshdr {
 };
 
 /*
+ * sds 是char *的别名
  * 内联函数，用于返回字符串的长度，不包括剩余空间长度
+ * TODO: 这块有点迷惑
  */
 static inline size_t sdslen(const sds s) {
     struct sdshdr *sh = (void*)(s-(sizeof(struct sdshdr)));
@@ -61,15 +63,15 @@ static inline size_t sdsavail(const sds s) {
     return sh->free;
 }
 
-sds sdsnewlen(const void *init, size_t initlen);    // 新的字符串长度
-sds sdsnew(const char *init);   // 申请一个新的字符串
-sds sdsempty(void); // 字符串置空
+sds sdsnewlen(const void *init, size_t initlen);    // 根据给定长度，创建一个sds
+sds sdsnew(const char *init);   // 根据给定的字符串，创建一个sds
+sds sdsempty(void); // 创建一个空sds
 size_t sdslen(const sds s); // 返回字符串的长度
 sds sdsdup(const sds s);    // 存储字符串
 void sdsfree(sds s);    // 删除字符串
 size_t sdsavail(const sds s);   // 返回剩余空间
-sds sdsgrowzero(sds s, size_t len); // 
-// 字符串拼接先关操作
+sds sdsgrowzero(sds s, size_t len); // 用空字符扩展到指定长度
+// 字符串拼接
 sds sdscatlen(sds s, const void *t, size_t len);
 sds sdscat(sds s, const char *t);
 sds sdscatsds(sds s, const sds t);
