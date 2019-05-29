@@ -48,12 +48,17 @@
  * You can print the string with printf() as there is an implicit \0 at the
  * end of the string. However the string is binary safe and can contain
  * \0 characters in the middle, as the length is stored in the sds header. */
+
+// 根据给定长度生成一个sds，可以同时给定数据内容（*init）并且返回sds的字符部分
+// 二进制安全的
 sds sdsnewlen(const void *init, size_t initlen) {
     struct sdshdr *sh;
 
     if (init) {
+        // 初始化过的，分配一块连续的空间，包含\0的位置
         sh = zmalloc(sizeof(struct sdshdr)+initlen+1);
     } else {
+        // 未初始化过，需要直接创建，内部调用calloc，分配一块空间n=1,初始化值都为0
         sh = zcalloc(sizeof(struct sdshdr)+initlen+1);
     }
     if (sh == NULL) return NULL;
@@ -61,17 +66,20 @@ sds sdsnewlen(const void *init, size_t initlen) {
     sh->free = 0;
     if (initlen && init)
         memcpy(sh->buf, init, initlen);
+    // 末尾使用空值，兼容std
     sh->buf[initlen] = '\0';
     return (char*)sh->buf;
 }
 
 /* Create an empty (zero length) sds string. Even in this case the string
  * always has an implicit null term. */
+// 直接调用sdsnewlen，设置成一个空的sds
 sds sdsempty(void) {
     return sdsnewlen("",0);
 }
 
 /* Create a new sds string starting from a null terminated C string. */
+// 根据输入的字符串，转化成sds
 sds sdsnew(const char *init) {
     size_t initlen = (init == NULL) ? 0 : strlen(init);
     return sdsnewlen(init, initlen);
@@ -102,6 +110,7 @@ void sdsfree(sds s) {
  * The output will be "2", but if we comment out the call to sdsupdatelen()
  * the output will be "6" as the string was modified but the logical length
  * remains 6 bytes. */
+// 更新sds的长度，因为sds保存了二进制安全的功能，当中间插入了\0，也是支持的
 void sdsupdatelen(sds s) {
     struct sdshdr *sh = (void*) (s-(sizeof(struct sdshdr)));
     int reallen = strlen(s);
@@ -126,6 +135,7 @@ void sdsclear(sds s) {
  *
  * Note: this does not change the *length* of the sds string as returned
  * by sdslen(), but only the free buffer space we have. */
+// 扩大sds的空间，空间都增加到free中
 sds sdsMakeRoomFor(sds s, size_t addlen) {
     struct sdshdr *sh, *newsh;
     size_t free = sdsavail(s);
@@ -197,6 +207,7 @@ size_t sdsAllocSize(sds s) {
  * ... check for nread <= 0 and handle it ...
  * sdsIncrLen(s, nread);
  */
+// 可以动态的增长和减少sds的长度
 void sdsIncrLen(sds s, int incr) {
     struct sdshdr *sh = (void*) (s-(sizeof(struct sdshdr)));
 
@@ -291,6 +302,7 @@ sds sdscpy(sds s, const char *t) {
     return sdscpylen(s, t, strlen(t));
 }
 
+//TODO:0530
 /* Helper for sdscatlonglong() doing the actual number -> string
  * conversion. 's' must point to a string with room for at least
  * SDS_LLSTR_SIZE bytes.

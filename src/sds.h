@@ -37,18 +37,18 @@
 #include <sys/types.h>
 #include <stdarg.h>
 
+// sds的buf指针位置
 typedef char *sds;
 
 struct sdshdr {
-    unsigned int len;   // 字符串的长度
+    unsigned int len;   // 字符串的长度，结构体总长度=len+free+strlen(buf)
     unsigned int free;  // 申请空间中剩余的长度
     char buf[];         // 字符串的存储位置
 };
 
 /*
- * sds 是char *的别名
+ * sds 是char *的别名，s代表buf的首地址
  * 内联函数，用于返回字符串的长度，不包括剩余空间长度
- * TODO: 这块有点迷惑
  */
 static inline size_t sdslen(const sds s) {
     struct sdshdr *sh = (void*)(s-(sizeof(struct sdshdr)));
