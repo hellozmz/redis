@@ -382,9 +382,18 @@ sds sdsfromlonglong(long long value) {
     return sdsnewlen(buf,len);
 }
 
-//TODO:0530
+/*
+ *  将可变参数格式化的输出到一个数组中
+ *  int vsnprintf(char *str, size_t size,  const  char  *format,  va_list ap);
+ *  str: 返回值指针
+ *  size: 返回值的长度上限
+ *  format: 输出字符串格式
+ *  ap: 可变参数
+ */
+
 /* Like sdscatprintf() but gets va_list instead of being variadic. */
 // fmt指定格式，将变长参数转化成对应的格式并输出
+// 格式化字符串后，将字符串拼接到原有的sds后边
 sds sdscatvprintf(sds s, const char *fmt, va_list ap) {
     // va_list是C语言中解决可变参数问题的宏，variadic_list
     va_list cpy;
@@ -402,9 +411,12 @@ sds sdscatvprintf(sds s, const char *fmt, va_list ap) {
 
     /* Try with buffers two times bigger every time we fail to
      * fit the string in the current buffer size. */
+    // 通过检查-2的位置，来判断申请的buf空间是否被填满
+    // 如果填满，按照size *= 2的方式去扩容
     while(1) {
         buf[buflen-2] = '\0';
         va_copy(cpy,ap);
+        // 将可变参数格式化后输出到buf中
         vsnprintf(buf, buflen, fmt, cpy);
         va_end(cpy);
         if (buf[buflen-2] != '\0') {
@@ -418,6 +430,7 @@ sds sdscatvprintf(sds s, const char *fmt, va_list ap) {
     }
 
     /* Finally concat the obtained string to the SDS string and return it. */
+    // 连接起来给出的sds和格式化的字符串
     t = sdscat(s, buf);
     if (buf != staticbuf) zfree(buf);
     return t;
@@ -440,6 +453,7 @@ sds sdscatvprintf(sds s, const char *fmt, va_list ap) {
  * s = sdscatprintf(sdsempty(), "... your format ...", args);
  */
 sds sdscatprintf(sds s, const char *fmt, ...) {
+    // 将可变参数列表转化成va_list
     va_list ap;
     char *t;
     va_start(ap, fmt);
@@ -506,6 +520,7 @@ sds sdscatfmt(sds s, char const *fmt, ...) {
                 break;
             case 'i':
             case 'I':
+                // va_arg 设定类型
                 if (next == 'i')
                     num = va_arg(ap,int);
                 else
@@ -585,9 +600,12 @@ sds sdstrim(sds s, const char *cset) {
 
     sp = start = s;
     ep = end = s+sdslen(s)-1;
+    // strchr(string, char), 查找string中最先出现char的位置
+    // 存在返回指针值，不存在返回NULL
     while(sp <= end && strchr(cset, *sp)) sp++;
     while(ep > start && strchr(cset, *ep)) ep--;
     len = (sp > ep) ? 0 : ((ep-sp)+1);
+    // memmove比memcpy更加灵活，当dest和src存在重叠部分的时候，仍能顺利进行
     if (sh->buf != sp) memmove(sh->buf, sp, len);
     sh->buf[len] = '\0';
     sh->free = sh->free+(sh->len-len);
@@ -616,6 +634,7 @@ void sdsrange(sds s, int start, int end) {
     size_t newlen, len = sdslen(s);
 
     if (len == 0) return;
+    // 处理长度为负数的情况，直接pos+=value
     if (start < 0) {
         start = len+start;
         if (start < 0) start = 0;
@@ -635,6 +654,7 @@ void sdsrange(sds s, int start, int end) {
     } else {
         start = 0;
     }
+    // 依靠memmove和数据的起始以及长度去获取结果
     if (start && newlen) memmove(sh->buf, sh->buf+start, newlen);
     sh->buf[newlen] = 0;
     sh->free = sh->free+(sh->len-newlen);
@@ -673,6 +693,7 @@ int sdscmp(const sds s1, const sds s2) {
     l1 = sdslen(s1);
     l2 = sdslen(s2);
     minlen = (l1 < l2) ? l1 : l2;
+    // 内存操作很多，直接调用memcmp去实现比较的功能
     cmp = memcmp(s1,s2,minlen);
     if (cmp == 0) return l1-l2;
     return cmp;
@@ -694,6 +715,14 @@ int sdscmp(const sds s1, const sds s2) {
  * requires length arguments. sdssplit() is just the
  * same function but for zero-terminated strings.
  */
+/*
+ * 将给定字符串s和分割符sep进行分割
+ * s 待分割字符串
+ * len 字符串长度
+ * sep 分割字符串
+ * count 分割后字符长度
+ * */
+// TODO
 sds *sdssplitlen(const char *s, int len, const char *sep, int seplen, int *count) {
     int elements = 0, slots = 5, start = 0, j;
     sds *tokens;
