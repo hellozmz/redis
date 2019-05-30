@@ -302,7 +302,6 @@ sds sdscpy(sds s, const char *t) {
     return sdscpylen(s, t, strlen(t));
 }
 
-//TODO:0530
 /* Helper for sdscatlonglong() doing the actual number -> string
  * conversion. 's' must point to a string with room for at least
  * SDS_LLSTR_SIZE bytes.
@@ -310,6 +309,7 @@ sds sdscpy(sds s, const char *t) {
  * The function returns the length of the null-terminated string
  * representation stored at 's'. */
 #define SDS_LLSTR_SIZE 21
+// 返回数字转字符串后的长度
 int sdsll2str(char *s, long long value) {
     char *p, aux;
     unsigned long long v;
@@ -317,6 +317,7 @@ int sdsll2str(char *s, long long value) {
 
     /* Generate the string representation, this method produces
      * an reversed string. */
+    // 将数字转化成字符串，按位的去处理，插入到一个字符串中，然后反转
     v = (value < 0) ? -value : value;
     p = s;
     do {
@@ -381,8 +382,11 @@ sds sdsfromlonglong(long long value) {
     return sdsnewlen(buf,len);
 }
 
+//TODO:0530
 /* Like sdscatprintf() but gets va_list instead of being variadic. */
+// fmt指定格式，将变长参数转化成对应的格式并输出
 sds sdscatvprintf(sds s, const char *fmt, va_list ap) {
+    // va_list是C语言中解决可变参数问题的宏，variadic_list
     va_list cpy;
     char staticbuf[1024], *buf = staticbuf, *t;
     size_t buflen = strlen(fmt)*2;
