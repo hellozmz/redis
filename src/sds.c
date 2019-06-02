@@ -720,10 +720,11 @@ int sdscmp(const sds s1, const sds s2) {
  * s 待分割字符串
  * len 字符串长度
  * sep 分割字符串
- * count 分割后字符长度
+ * seplen 分割字符串长度
+ * count 分割后字符个数
  * */
-// TODO
 sds *sdssplitlen(const char *s, int len, const char *sep, int seplen, int *count) {
+    // slots预留空间，elements使用的空间，tokens分割后的字符串存储位置 
     int elements = 0, slots = 5, start = 0, j;
     sds *tokens;
 
@@ -741,6 +742,7 @@ sds *sdssplitlen(const char *s, int len, const char *sep, int seplen, int *count
         if (slots < elements+2) {
             sds *newtokens;
 
+            // 按照*2的方式去扩展长度
             slots *= 2;
             newtokens = zrealloc(tokens,sizeof(sds)*slots);
             if (newtokens == NULL) goto cleanup;
@@ -786,6 +788,8 @@ void sdsfreesplitres(sds *tokens, int count) {
  *
  * After the call, the modified sds string is no longer valid and all the
  * references must be substituted with the new pointer returned by the call. */
+// excaped string: 转义字符
+// 在sds末尾添加转义字符，并调整成可以打印的格式
 sds sdscatrepr(sds s, const char *p, size_t len) {
     s = sdscatlen(s,"\"",1);
     while(len--) {
@@ -861,6 +865,8 @@ int hex_digit_to_int(char c) {
  * quotes or closed quotes followed by non space characters
  * as in: "foo"bar or "foo'
  */
+// REPL-alike 交互式解析器
+// 返回sds的数组
 sds *sdssplitargs(const char *line, int *argc) {
     const char *p = line;
     char *current = NULL;
@@ -980,6 +986,7 @@ err:
  *
  * The function returns the sds string pointer, that is always the same
  * as the input pointer since no resize is needed. */
+// 对字符串的某些字符进行映射改写
 sds sdsmapchars(sds s, const char *from, const char *to, size_t setlen) {
     size_t j, i, l = sdslen(s);
 
@@ -996,6 +1003,7 @@ sds sdsmapchars(sds s, const char *from, const char *to, size_t setlen) {
 
 /* Join an array of C strings using the specified separator (also a C string).
  * Returns the result as an sds string. */
+// 拼接sds字符串
 sds sdsjoin(char **argv, int argc, char *sep) {
     sds join = sdsempty();
     int j;
@@ -1017,6 +1025,7 @@ int main(void) {
         struct sdshdr *sh;
         sds x = sdsnew("foo"), y;
 
+        // 自己实现了test的框架
         test_cond("Create a string and obtain the length",
             sdslen(x) == 3 && memcmp(x,"foo\0",4) == 0)
 
