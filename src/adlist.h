@@ -32,26 +32,30 @@
 #define __ADLIST_H__
 
 /* Node, List, and Iterator are the only data structures used currently. */
+// 由于redis使用c语言实现，没有链表，map，迭代器等概念，所以需要自己去实现。如果直接使用c++去重写redis，那么这些部分可以使用stl::list<>去直接使用，但是会失去redis中sds对内存直接操作的经典操作（除非两种方式混用）
 
+// 双向链表结点
 typedef struct listNode {
-    struct listNode *prev;
-    struct listNode *next;
-    void *value;
-} listNode;
+    struct listNode *prev;  // 前一个结点指针
+    struct listNode *next;  // 后一个结点指针
+    void *value;    // 当前结点指针
+} listNode;     // 就地的定义结点
 
+// 迭代器
 typedef struct listIter {
-    listNode *next;
-    int direction;
-} listIter;
+    listNode *next;     // 获取当前结点
+    int direction;      // 迭代器方向，AL_START_HEAD=0，AL_START_TAIL=1
+} listIter;     // 定义迭代器
 
+// 双向链表
 typedef struct list {
-    listNode *head;
-    listNode *tail;
-    void *(*dup)(void *ptr);
-    void (*free)(void *ptr);
-    int (*match)(void *ptr, void *key);
-    unsigned long len;
-} list;
+    listNode *head;     // 头指针
+    listNode *tail;     // 尾指针
+    void *(*dup)(void *ptr);    // 复制链表
+    void (*free)(void *ptr);    // 清空链表
+    int (*match)(void *ptr, void *key);     // 匹配结点值
+    unsigned long len;  // 双向链表长度
+} list;     // 定义双向链表
 
 /* Functions implemented as macros */
 #define listLength(l) ((l)->len)
@@ -82,9 +86,9 @@ void listReleaseIterator(listIter *iter);
 list *listDup(list *orig);
 listNode *listSearchKey(list *list, void *key);
 listNode *listIndex(list *list, long index);
-void listRewind(list *list, listIter *li);
-void listRewindTail(list *list, listIter *li);
-void listRotate(list *list);
+void listRewind(list *list, listIter *li);  // 将迭代器置于链表头
+void listRewindTail(list *list, listIter *li);  // 将迭代器置于链表尾
+void listRotate(list *list);    // 链表旋转
 
 /* Directions for iterators */
 #define AL_START_HEAD 0

@@ -63,6 +63,7 @@ void listRelease(list *list)
     current = list->head;
     len = list->len;
     while(len--) {
+        // 从前向后，依次删除结点
         next = current->next;
         if (list->free) list->free(current->value);
         zfree(current);
@@ -85,9 +86,11 @@ list *listAddNodeHead(list *list, void *value)
         return NULL;
     node->value = value;
     if (list->len == 0) {
+        // 向空链表中插入数据，该结点既是头也是尾，并且将前后的指向都设置为空
         list->head = list->tail = node;
         node->prev = node->next = NULL;
     } else {
+        // 当链表非空的时候，插入结点后，需要更新head以及len
         node->prev = NULL;
         node->next = list->head;
         list->head->prev = node;
@@ -123,6 +126,8 @@ list *listAddNodeTail(list *list, void *value)
     return list;
 }
 
+// after==0,插入到old_node的前边
+// after非0的时候，插入到后面
 list *listInsertNode(list *list, listNode *old_node, void *value, int after) {
     listNode *node;
 
@@ -175,6 +180,10 @@ void listDelNode(list *list, listNode *node)
  * call to listNext() will return the next element of the list.
  *
  * This function can't fail. */
+// AL_START_HEAD = 0
+// AL_START_TAIL = 1
+// 根据direction的值去判断是从头开始迭代还是从尾开始迭代
+// 获取链表的迭代器
 listIter *listGetIterator(list *list, int direction)
 {
     listIter *iter;
@@ -194,11 +203,13 @@ void listReleaseIterator(listIter *iter) {
 }
 
 /* Create an iterator in the list private iterator structure */
+// 迭代器置于链表头
 void listRewind(list *list, listIter *li) {
     li->next = list->head;
     li->direction = AL_START_HEAD;
 }
 
+// 迭代器置于链表尾
 void listRewindTail(list *list, listIter *li) {
     li->next = list->tail;
     li->direction = AL_START_TAIL;
@@ -220,10 +231,13 @@ void listRewindTail(list *list, listIter *li) {
  * */
 listNode *listNext(listIter *iter)
 {
+    // 获取当前结点内容
     listNode *current = iter->next;
 
     if (current != NULL) {
         if (iter->direction == AL_START_HEAD)
+            // 保存当前结点的下一个结点，del删链表结点不会造成断链的问题
+            // iter的next指针，代表了下一个结点的位置，当前的删除也不会被影响
             iter->next = current->next;
         else
             iter->next = current->prev;
@@ -250,10 +264,12 @@ list *listDup(list *orig)
     copy->dup = orig->dup;
     copy->free = orig->free;
     copy->match = orig->match;
+    // 获取头结点，然后依次获取下一个结点
     iter = listGetIterator(orig, AL_START_HEAD);
     while((node = listNext(iter)) != NULL) {
         void *value;
 
+        // 根据结点值复制，如果有dup函数，使用该函数进行复制
         if (copy->dup) {
             value = copy->dup(node->value);
             if (value == NULL) {
@@ -289,6 +305,7 @@ listNode *listSearchKey(list *list, void *key)
 
     iter = listGetIterator(list, AL_START_HEAD);
     while((node = listNext(iter)) != NULL) {
+        // 找到值相等的结点
         if (list->match) {
             if (list->match(node->value, key)) {
                 listReleaseIterator(iter);
@@ -311,6 +328,7 @@ listNode *listSearchKey(list *list, void *key)
  * from the tail, -1 is the last element, -2 the penultimate
  * and so on. If the index is out of range NULL is returned. */
 listNode *listIndex(list *list, long index) {
+    // n代表着结点，如果为空，说明到达尾
     listNode *n;
 
     if (index < 0) {
@@ -325,6 +343,7 @@ listNode *listIndex(list *list, long index) {
 }
 
 /* Rotate the list removing the tail node and inserting it to the head. */
+// 由于是双向链表，需要对链表头进行处理即可
 void listRotate(list *list) {
     listNode *tail = list->tail;
 
