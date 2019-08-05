@@ -44,6 +44,7 @@
 /* Unused arguments generate annoying warnings... */
 #define DICT_NOTUSED(V) ((void) V)
 
+// 哈希表结点，内部是一个kv pair, 以及指向下一个相同hash索引值的下一个结点位置
 typedef struct dictEntry {
     void *key;
     union {
@@ -67,10 +68,10 @@ typedef struct dictType {
 /* This is our hash table structure. Every dictionary has two of this as we
  * implement incremental rehashing, for the old to the new table. */
 typedef struct dictht {
-    dictEntry **table;
-    unsigned long size;
-    unsigned long sizemask;
-    unsigned long used;
+    dictEntry **table;  // 哈希表
+    unsigned long size;     // 哈希表长度
+    unsigned long sizemask;     // size-1, 用于计算哈希表掩码，解决hash冲突的问题
+    unsigned long used;     // 哈希表已有结点数量
 } dictht;
 
 typedef struct dict {
@@ -100,6 +101,7 @@ typedef void (dictScanFunction)(void *privdata, const dictEntry *de);
 #define DICT_HT_INITIAL_SIZE     4
 
 /* ------------------------------- Macros ------------------------------------*/
+// 宏定义的时候使用do while(0), 可以解决编译时候的if判断没有大括号的问题
 #define dictFreeVal(d, entry) \
     if ((d)->type->valDestructor) \
         (d)->type->valDestructor((d)->privdata, (entry)->v.val)
